@@ -157,7 +157,8 @@ const ITEM_SELECTOR = `[cmdk-item=""]`
 const VALID_ITEM_SELECTOR = `${ITEM_SELECTOR}:not([aria-disabled="true"])`
 const SELECT_EVENT = `cmdk-item-select`
 const VALUE_ATTR = `data-value`
-const defaultFilter: CommandProps['filter'] = (value, search, keywords) => commandScore(value, search, keywords)
+const defaultFilter: Required<CommandProps>['filter'] = (value, search, keywords) =>
+  commandScore(value, search, keywords)
 
 // @ts-ignore
 const CommandContext = React.createContext<Context>(undefined)
