@@ -51,40 +51,6 @@ var IS_GAP_REGEXP = /[\\\/_+.#"@\[\(\{&]/,
   IS_SPACE_REGEXP = /[\s-]/,
   COUNT_SPACE_REGEXP = /[\s-]/g
 
-function stringToLatin(string) {
-  const latinString = string
-    // Decompose the string into base characters and diacritical marks
-    .normalize('NFD')
-    // Remove combining diacritical marks
-    .replace(/[\u0300-\u036f]/g, '')
-  // Convert all valid space characters to space so they match each other
-  return latinString.toLowerCase().replace(COUNT_SPACE_REGEXP, ' ')
-}
-
-// Cache for normalized strings to avoid redundant normalization operations
-// The cache has a size limit to prevent memory leaks
-const FORMAT_CACHE_SIZE = 1000
-const formatCache = new Map<string, string>()
-
-function getCachedFormatted(input: string): string {
-  const cached = formatCache.get(input)
-  if (cached !== undefined) {
-    return cached
-  }
-
-  // Simple cache eviction: remove oldest entry if cache is too large
-  // Do this before adding to keep cache size at limit
-  if (formatCache.size >= FORMAT_CACHE_SIZE) {
-    // Remove first entry (oldest, since Map maintains insertion order)
-    const firstKey = formatCache.keys().next().value
-    formatCache.delete(firstKey)
-  }
-
-  const formatted = stringToLatin(input)
-  formatCache.set(input, formatted)
-  return formatted
-}
-
 function commandScoreInner(
   string,
   abbreviation,
@@ -181,14 +147,21 @@ function commandScoreInner(
   return highScore
 }
 
+function formatInput(string) {
+  const latinString = string
+    // Decompose the string into base characters and diacritical marks
+    .normalize('NFD')
+    // Remove combining diacritical marks
+    .replace(/[\u0300-\u036f]/g, '')
+  // Convert all valid space characters to space so they match each other
+  return latinString.toLowerCase().replace(COUNT_SPACE_REGEXP, ' ')
+}
+
 export function commandScore(string: string, abbreviation: string, aliases: string[]): number {
   /* NOTE:
    * in the original, we used to do the lower-casing on each recursive call, but this meant that toLowerCase()
    * was the dominating cost in the algorithm, passing both is a little ugly, but considerably faster.
-   *
-   * We also cache normalized strings to avoid redundant normalize('NFD') and replace() operations,
-   * which is especially beneficial when filtering many items with the same search query.
    */
   string = aliases && aliases.length > 0 ? `${string + ' ' + aliases.join(' ')}` : string
-  return commandScoreInner(string, abbreviation, getCachedFormatted(string), getCachedFormatted(abbreviation), 0, 0, {})
+  return commandScoreInner(string, abbreviation, formatInput(string), formatInput(abbreviation), 0, 0, {})
 }
