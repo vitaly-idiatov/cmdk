@@ -58,7 +58,7 @@ function stringToLatin(string) {
     // Remove combining diacritical marks
     .replace(/[\u0300-\u036f]/g, '')
   // Convert all valid space characters to space so they match each other
-  return latinString
+  return latinString.toLowerCase().replace(COUNT_SPACE_REGEXP, ' ')
 }
 
 // Cache for normalized strings to avoid redundant normalization operations
@@ -66,7 +66,7 @@ function stringToLatin(string) {
 const FORMAT_CACHE_SIZE = 1000
 const formatCache = new Map<string, string>()
 
-function getCachedFormatted(input: string, shouldLowerCase: boolean): string {
+function getCachedFormatted(input: string): string {
   const cached = formatCache.get(input)
   if (cached !== undefined) {
     return cached
@@ -80,7 +80,7 @@ function getCachedFormatted(input: string, shouldLowerCase: boolean): string {
     formatCache.delete(firstKey)
   }
 
-  const formatted = shouldLowerCase ? stringToLatin(input).toLowerCase() : stringToLatin(input)
+  const formatted = stringToLatin(input)
   formatCache.set(input, formatted)
   return formatted
 }
@@ -190,13 +190,5 @@ export function commandScore(string: string, abbreviation: string, aliases: stri
    * which is especially beneficial when filtering many items with the same search query.
    */
   string = aliases && aliases.length > 0 ? `${string + ' ' + aliases.join(' ')}` : string
-  return commandScoreInner(
-    getCachedFormatted(string, false),
-    getCachedFormatted(abbreviation, false),
-    getCachedFormatted(string, true),
-    getCachedFormatted(abbreviation, true),
-    0,
-    0,
-    {},
-  )
+  return commandScoreInner(string, abbreviation, getCachedFormatted(string), getCachedFormatted(abbreviation), 0, 0, {})
 }
