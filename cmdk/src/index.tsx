@@ -696,7 +696,16 @@ const Item = React.forwardRef<HTMLDivElement, ItemProps>((props, forwardedRef) =
 
   if (!render) return null
 
-  const { disabled, value: _, searchableValue: __, onSelect: ___, forceMount: ____, keywords: _____, ...etc } = props
+  const {
+    disabled,
+    value: _,
+    searchableValue: __,
+    onSelect: ___,
+    forceMount: ____,
+    keywords: _____,
+    onPointerMove,
+    ...etc
+  } = props
 
   return (
     <Primitive.div
@@ -709,7 +718,18 @@ const Item = React.forwardRef<HTMLDivElement, ItemProps>((props, forwardedRef) =
       aria-selected={Boolean(selected)}
       data-disabled={Boolean(disabled)}
       data-selected={Boolean(selected)}
-      onPointerMove={disabled || context.disablePointerSelection ? undefined : select}
+      onPointerMove={
+        disabled || context.disablePointerSelection
+          ? undefined
+          : (e) => {
+              if (onPointerMove) {
+                onPointerMove(e)
+              }
+              if (!e.defaultPrevented) {
+                select()
+              }
+            }
+      }
       onClick={disabled ? undefined : onSelect}
     >
       {props.children}
