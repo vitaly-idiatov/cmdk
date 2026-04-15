@@ -43,7 +43,7 @@ type ItemProps = Children &
     /** Whether this item is currently disabled. */
     disabled?: boolean
     /** Event handler for when this item is selected, either via click or keyboard selection. */
-    onSelect?: (value: string) => void
+    onSelect?: (value: string, meta: { source: 'mouse' | 'keyboard' }) => void
     /**
      * A unique value for this item.
      * If no value is provided, it will be inferred from `children` or the rendered `textContent`. If your `textContent` changes between renders, you _must_ provide a stable, unique `value`.
@@ -681,13 +681,14 @@ const Item = React.forwardRef<HTMLDivElement, ItemProps>((props, forwardedRef) =
   React.useEffect(() => {
     const element = ref.current
     if (!element || props.disabled) return
-    element.addEventListener(SELECT_EVENT, onSelect)
-    return () => element.removeEventListener(SELECT_EVENT, onSelect)
+    const handler = () => onSelectWith('keyboard')
+    element.addEventListener(SELECT_EVENT, handler)
+    return () => element.removeEventListener(SELECT_EVENT, handler)
   }, [render, props.onSelect, props.disabled])
 
-  function onSelect() {
+  function onSelectWith(source: 'mouse' | 'keyboard') {
     select()
-    propsRef.current.onSelect?.(value.current)
+    propsRef.current.onSelect?.(value.current, { source })
   }
 
   function select() {
@@ -730,7 +731,7 @@ const Item = React.forwardRef<HTMLDivElement, ItemProps>((props, forwardedRef) =
               }
             }
       }
-      onClick={disabled ? undefined : onSelect}
+      onClick={disabled ? undefined : () => onSelectWith('mouse')}
     >
       {props.children}
     </Primitive.div>
